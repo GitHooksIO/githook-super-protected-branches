@@ -1,0 +1,18 @@
+title: Super Protected Branches
+
+description: "Rolls back any commits made directly to a branch of your choice, branching it and making a PR instead."
+
+entry_point: protect-branch.js
+
+triggered_on:
+  - push
+
+scopes_required:
+  - 'repo'
+
+parameters:
+  'branch':
+    title:       Branch to protect
+    description: "Default: master"
+    type:        string
+    required:    no
