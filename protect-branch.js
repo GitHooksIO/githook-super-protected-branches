@@ -3,7 +3,14 @@ module.exports = function (data, process) {
     var branchToProtect = data.parameters.branch || 'master',
         preventInfiniteLoop = 'SUPER_PROTECT_REVERT';
 
-    if ( data.payload.ref === ('refs/heads/' + branchToProtect) && data.payload.head_commit.message !== preventInfiniteLoop ) {
+    if ( data.payload.ref !== ('refs/heads/' + branchToProtect) ) {
+        process.succeed('the commit was to ' + data.payload.ref + ' and thus was not a problem');
+    }
+    else if (data.payload.head_commit.message === preventInfiniteLoop ) {
+        process.succeed('This was an automated commit made by super-protected-branches, so processing was skipped');
+    }
+    else {
+
         // STEP 1 - branch off.
 
         var newBranchName = branchToProtect + "--super-protected--" + Date.now(),
@@ -68,8 +75,5 @@ module.exports = function (data, process) {
             }
         });
 
-    }
-    else {
-        process.succeed('the commit was to ' + data.payload.ref + ' and thus was not a problem');
     }
 }
