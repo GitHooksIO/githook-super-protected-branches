@@ -9,4 +9,6 @@ module.exports = function (data, process) {
     // If the branch was data.parameters.branch, we need to branch off, open a pull request,
     // switch back to data.parameters.branch, and revert the pushed commit.
 
+
+    process.succeed();
 }
