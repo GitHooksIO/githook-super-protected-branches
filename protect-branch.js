@@ -16,10 +16,8 @@ module.exports = function (data, process) {
                     'Authorization': 'token ' + data.access_token
                 },
                 json: {
-                    {
-                      "ref": "refs/heads/" + branchToProtect + "--super-protected--" + Date.now(),
-                      "sha": data.payload.after
-                    }
+                    "ref": "refs/heads/" + branchToProtect + "--super-protected--" + Date.now(),
+                    "sha": data.payload.after
                 }
             };
 
