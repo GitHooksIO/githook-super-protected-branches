@@ -1,8 +1,9 @@
 module.exports = function (data, process) {
 
-    var branchToProtect = data.parameters.branch || 'master';
+    var branchToProtect = data.parameters.branch || 'master',
+        preventInfiniteLoop = 'SUPER_PROTECT_REVERT';
 
-    if ( data.payload.ref === ('refs/heads/' + branchToProtect) ) {
+    if ( data.payload.ref === ('refs/heads/' + branchToProtect) && data.payload.head_commit.message !== preventInfiniteLoop ) {
         // STEP 1 - branch off.
 
         var newBranchName = branchToProtect + "--super-protected--" + Date.now(),
@@ -25,21 +26,23 @@ module.exports = function (data, process) {
             }
             else {
                 // STEP 2 - revert the pushed commit - woops - caused an infinite loop!!!
-/*
-                options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/heads/' + branchToProtect;
+
+                options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
                 options.json = {
-                    "sha": data.payload.before,
-                    "force": true
+                    "tree":  'refs/heads/' + branchToProtect
+                    "parents": [data.payload.before],
+                    "message": preventInfiniteLoop
                 };
 
-                request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
+                request.post(options, function protectedBranchReverted(err, httpResponse, body) {
 
                     if (err) {
                         process.fail('Could not send POST request: ' + err);
                     }
                     else {
+                        process.succeed('got so far!');
                         // STEP 3 - open a Pull Request with the new branch.
-
+/*
                         options.url = data.payload.repository.pulls_url.replace('{/number}', '');
                         options.json = {
                             title: data.payload.head_commit.message,
@@ -56,10 +59,11 @@ module.exports = function (data, process) {
                                 process.succeed('Pull request creation was successful. Response: ' + JSON.stringify(body));
                             }
                         });
+*/
                     }
 
                 });
-*/
+
 
             }
         });
