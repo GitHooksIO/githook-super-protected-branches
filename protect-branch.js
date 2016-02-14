@@ -29,7 +29,7 @@ module.exports = function (data, process) {
                 // STEP 2 - revert the pushed commit
                 var theCommitBeforeThePush = data.payload.before;
 
-                options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/' + data.payload.after;
+                options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/heads/' + branchToProtect;
                 options.json = {
                     "sha": data.payload.before,
                     "force": true
