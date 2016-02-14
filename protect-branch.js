@@ -24,8 +24,8 @@ module.exports = function (data, process) {
                 process.fail('Could not send POST request: ' + err);
             }
             else {
-                // STEP 2 - revert the pushed commit
-
+                // STEP 2 - revert the pushed commit - woops - caused an infinite loop!!!
+/*
                 options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/heads/' + branchToProtect;
                 options.json = {
                     "sha": data.payload.before,
@@ -59,6 +59,7 @@ module.exports = function (data, process) {
                     }
 
                 });
+*/
 
             }
         });
