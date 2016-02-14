@@ -47,7 +47,8 @@ module.exports = function (data, process) {
                         process.fail('Could not send POST request: ' + err);
                     }
                     else {
-                        process.succeed('got so far!');
+                        process.succeed('POST request successful. Result: ' + JSON.stringify(body));
+
                         // STEP 3 - open a Pull Request with the new branch.
 /*
                         options.url = data.payload.repository.pulls_url.replace('{/number}', '');
