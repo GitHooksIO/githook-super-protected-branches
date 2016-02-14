@@ -6,10 +6,9 @@ module.exports = function (data, process) {
 
         // STEP 1 - branch off.
 
-        var apiUrl = data.payload.repository.git_refs_url.replace('{/sha}', ''),
-            newBranchName = branchToProtect + "--super-protected--" + Date.now(),
+        var newBranchName = branchToProtect + "--super-protected--" + Date.now(),
             options = {
-                url: apiUrl,
+                url: data.payload.repository.git_refs_url.replace('{/sha}', ''),
                 headers: {
                     'Content-Type':  'application/json',
                     'User-Agent':    'super-protected-branches',
@@ -30,7 +29,7 @@ module.exports = function (data, process) {
                 // STEP 2 - revert the pushed commit
                 var theCommitBeforeThePush = data.payload.before;
 
-                options.url = data.payload.git_refs_url.replace('{/sha}', '');
+                options.url = data.payload.repository.git_refs_url.replace('{/sha}', '');
                 options.json = {
                     "ref": "refs/heads/" + branchToProtect,
                     "sha": data.payload.before
