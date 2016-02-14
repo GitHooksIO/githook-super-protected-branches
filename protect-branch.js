@@ -29,13 +29,13 @@ module.exports = function (data, process) {
                 // STEP 2 - revert the pushed commit
                 var theCommitBeforeThePush = data.payload.before;
 
-                options.url = data.payload.repository.git_refs_url.replace('{/sha}', '');
+                options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/' + data.payload.after;
                 options.json = {
-                    "ref": "refs/heads/" + branchToProtect,
-                    "sha": data.payload.before
+                    "sha": data.payload.before,
+                    "force": true
                 };
 
-                request.post(options, function protectedBranchReverted(err, httpResponse, body) {
+                request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
                     if (err) {
                         process.fail('Could not send POST request: ' + err);
                     }
