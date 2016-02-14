@@ -29,7 +29,7 @@ module.exports = function (data, process) {
 
                 options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
                 options.json = {
-                    "tree":  'refs/heads/' + branchToProtect
+                    "tree":  'refs/heads/' + branchToProtect,
                     "parents": [data.payload.before],
                     "message": preventInfiniteLoop
                 };
