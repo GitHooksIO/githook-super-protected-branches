@@ -4,8 +4,7 @@ module.exports = function (data, process) {
 
     if ( data.payload.ref === ('refs/heads/' + branchToProtect) ) {
 
-        // @TODO we need to branch off, open a pull request,
-        // switch back to branchToProtect, and revert the pushed commit.
+        // STEP 1 - branch off.
 
         var apiUrl = data.payload.repository.git_refs_url.replace('{/sha}', ''),
             options = {
@@ -28,6 +27,11 @@ module.exports = function (data, process) {
             else {
                 process.succeed('Branch creation successful. Response:' + JSON.stringify(body));
             }
+
+
+            // STEP 2 - open a Pull Request with new branch.
+
+            // STEP 3 - rollback the protected branch to previous state.
         });
 
     }
