@@ -48,7 +48,21 @@ module.exports = function (data, process) {
                     else {
                         process.succeed('POST request successful. Result: ' + JSON.stringify(body));
 
-                        // STEP 3 - open a Pull Request with the new branch.
+
+                        /*
+                        @TODO - fix.
+
+                        string(169) ""POST request successful. Result: {\"message\":\"Tree SHA is not a tree object\",\"documentation_url\":\"https://developer.github.com/v3/git/commits/#create-a-commit\"}""
+
+
+                        Need to set options.json.tree to a proper tree SHA. May need to use this:
+
+                        https://developer.github.com/v3/git/trees/#get-a-tree
+                         */
+
+
+
+                        // STEP 3 - open a Pull Request with the new branch. (could not do this as step 2 because the two branches would be equal, so no PR would be opened)
 /*
                         options.url = data.payload.repository.pulls_url.replace('{/number}', '');
                         options.json = {
