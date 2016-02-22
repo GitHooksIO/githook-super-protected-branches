@@ -56,8 +56,6 @@ module.exports = function (data, process) {
                                 "message": preventInfiniteLoop
                             };
 
-                            var newCommit = body.sha;
-
                             request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
                                 if (err) {
                                     process.fail('Could not send POST request: ' + err);
@@ -67,7 +65,7 @@ module.exports = function (data, process) {
                                     options.url = data.payload.repository.merges_url;
                                     options.json = {
                                         "base": branchToProtect,
-                                        "head": newCommit,
+                                        "head": body.sha,
                                         "commit_message": preventInfiniteLoop
                                     };
 
