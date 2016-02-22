@@ -72,14 +72,14 @@ module.exports = function (data, process) {
                         request.post(options, function newTreeCreated(err, httpResponse, body) {
                             checkForFailures(err);
 
-                            // // STEP 4.3 - associate the commit hash with a commit message
-                            // options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
-                            // options.json = {
-                            //     "tree":    body.sha,
-                            //     "message": preventInfiniteLoop
-                            // };
-                            // request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
-                            //     checkForFailures(err);
+                            // STEP 4.3 - associate the commit hash with a commit message
+                            options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
+                            options.json = {
+                                "tree":    body.sha,
+                                "message": preventInfiniteLoop
+                            };
+                            request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
+                                checkForFailures(err);
 
                                 // STEP 4.4 - add the commit hash & message to the tmpBranch
                                 options.url = data.payload.repository.merges_url;
@@ -88,16 +88,24 @@ module.exports = function (data, process) {
                                     "head": body.sha,
                                     "commit_message": preventInfiniteLoop
                                 };
+                                var preventInfiniteLoopCommit = body.sha;
                                 request.post(options, function protectedBranchReverted(err, httpResponse, body) {
                                     checkForFailures(err);
 
-                                    // @TODO
                                     // STEP 5 - replace the 'master' branch with the temporary `tmpBranch`
                                     // (steps 3,4,5 are necessary to prevent infinite loops)
-                                    // STEP 6 - open a PR with `newBranchName`
-                                    process.succeed('Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+                                    options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/heads/' + branchToProtect;
+                                    options.json = {
+                                        "sha": preventInfiniteLoopCommit,
+                                        "force": true
+                                    };
+                                    request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
+
+                                        // @TODO - STEP 6 - open a PR with `newBranchName`
+                                        process.succeed('Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+                                    });
                                 });
-                            // });
+                            });
                         });
                     });
                 });
