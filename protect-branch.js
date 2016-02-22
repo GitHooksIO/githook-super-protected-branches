@@ -72,6 +72,8 @@ module.exports = function (data, process) {
                         request.post(options, function newTreeCreated(err, httpResponse, body) {
                             checkForFailures(err);
 
+                            process.succees('HELLO: ' + JSON.stringify(body));
+
                             // STEP 4.3 - create a new commit object with the current commit SHA as the parent and the new tree SHA, getting a commit SHA back
                             options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
                             options.json = {
@@ -83,20 +85,18 @@ module.exports = function (data, process) {
                                 checkForFailures(err);
                                 process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
 
-                            /*
-                                // STEP 4.4 - add the commit hash & message to the tmpBranch
-                                options.url = data.payload.repository.merges_url;
-                                options.json = {
-                                    "base": tmpBranch,
-                                    "head": body.sha,
-                                    "commit_message": preventInfiniteLoop
-                                };
-                                var preventInfiniteLoopCommit = body.sha;
-                                request.post(options, function protectedBranchReverted(err, httpResponse, body) {
-                                    checkForFailures(err);
-                                    process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
-                                });
-*/
+
+                                // // STEP 5 - replace the 'master' branch with the temporary `tmpBranch`
+                                // // (steps 3,4,5 are necessary to prevent infinite loops)
+                                // options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/heads/' + branchToProtect;
+                                // options.json = {
+                                //     "sha": preventInfiniteLoopCommit,
+                                //     "force": true
+                                // };
+                                // request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
+
+
+                                // });
                             });
                         });
                     });
