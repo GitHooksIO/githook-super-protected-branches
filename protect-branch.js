@@ -72,12 +72,12 @@ module.exports = function (data, process) {
                         request.post(options, function newTreeCreated(err, httpResponse, body) {
                             checkForFailures(err);
 
-                            // STEP 4.3 - associate the commit hash with a commit message
-                            options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
-                            options.json = {
-                                "tree":    body.sha,
-                                "message": preventInfiniteLoop
-                            };
+                            // // STEP 4.3 - associate the commit hash with a commit message
+                            // options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
+                            // options.json = {
+                            //     "tree":    body.sha,
+                            //     "message": preventInfiniteLoop
+                            // };
                             request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
                                 checkForFailures(err);
 
@@ -97,7 +97,7 @@ module.exports = function (data, process) {
                                     // STEP 6 - open a PR with `newBranchName`
                                     process.succeed('Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
                                 });
-                            });
+                            // });
                         });
                     });
                 });
