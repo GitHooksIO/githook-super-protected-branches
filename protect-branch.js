@@ -34,17 +34,38 @@ module.exports = function (data, process) {
         request.post(options, function newBranchCreated(err, httpResponse, body) {
             checkForFailures(err);
 
-            options.url = data.payload.repository.git_refs_url.replace('{/sha}', branchToProtect),
+            // STEP 2 - create new temporary 'master' branch
+            var tmpBranch = branchToProtect + "--tmp--" + Date.now();
+
+            options.url = data.payload.repository.git_refs_url.replace('{/sha}', ''),
             options.json = {
-                "force": true,
+                "ref": "refs/heads/" + tmpBranch,
                 "sha": data.payload.before
-            };
+            }
+            request.post(options, function newBranchCreated(err, httpResponse, body) {
 
-            request.patch(options, function forceRollback(err, httpResponse, body) {
-                checkForFailures(err);
+                // STEP 3 - revert the pushed commit on the temporary 'master' branch
+                options.url = data.payload.repository.git_refs_url.replace('{/sha}', '/heads/' + tmpBranch),
+                options.json = {
+                    "force": true,
+                    "sha": data.payload.before
+                };
+                request.patch(options, function forceRollback(err, httpResponse, body) {
+                    checkForFailures(err);
 
-                process.succeed('Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+                    // @TODO
+                    // STEP 4 - add a new commit message `preventInfiniteLoop` to the `tmpBranch`
+                    // STEP 5 - replace the 'master' branch with the temporary `tmpBranch`
+                    // (steps 3,4,5 are necessary to prevent infinite loops)
+                    // STEP 6 - open a PR with `newBranchName`
+                    process.succeed('Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+                });
             });
+        });
+    }
+}
+
+
 
             /*
             options.url = data.payload.repository.trees_url.replace('{/sha}', '/' + data.payload.before);
@@ -95,6 +116,3 @@ module.exports = function (data, process) {
                 });
             });
 */
-        });
-    }
-}
