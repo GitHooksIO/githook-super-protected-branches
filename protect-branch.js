@@ -88,22 +88,24 @@ module.exports = function (data, process) {
                                 options.json = {
                                     "sha": body.sha
                                 };
+
+                                var preventInfiniteLoopCommit = body.sha;
+
                                 request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
                                     checkForFailures(err);
 
-                                    process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
+                                    // STEP 6 - replace the 'master' branch with the temporary `tmpBranch`
+                                    // (steps 3,4,5 are necessary to prevent infinite loops)
+                                    options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/heads/' + branchToProtect;
+                                    options.json = {
+                                        "sha": preventInfiniteLoopCommit,
+                                        "force": true
+                                    };
+                                    request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
+                                        checkForFailures(err);
 
-                                    // // STEP 6 - replace the 'master' branch with the temporary `tmpBranch`
-                                    // // (steps 3,4,5 are necessary to prevent infinite loops)
-                                    // options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/heads/' + branchToProtect;
-                                    // options.json = {
-                                    //     "sha": preventInfiniteLoopCommit,
-                                    //     "force": true
-                                    // };
-                                    // request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
-
-
-                                    // });
+                                        process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
+                                    });
                                 });
                             });
                         });
