@@ -40,22 +40,24 @@ module.exports = function (data, process) {
 
                     process.succeed(JSON.stringify(body));
 
-                    // // STEP 2 - revert the pushed commit - woops - caused an infinite loop!!!
+                    // STEP 2 - revert the pushed commit - woops - caused an infinite loop!!!
 
-                    // options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
-                    // options.json = {
-                    //     "tree":  data.payload.before,
-                    //     "message": preventInfiniteLoop
-                    // };
+                    options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
+                    options.json = {
+                        "message": preventInfiniteLoop,
+                        "tree":    data.payload.before,
+                        "parents": body.tree.map(function (item) { return item.sha; })
+                    };
 
-                    // request.post(options, function protectedBranchReverted(err, httpResponse, body) {
+                    request.post(options, function protectedBranchReverted(err, httpResponse, body) {
+                        if (err) {
+                            process.fail('Could not send POST request: ' + err);
+                        }
+                        else {
+                            process.succeed('POST request successful. Result: ' + JSON.stringify(body));
+                        }
 
-                    //     if (err) {
-                    //         process.fail('Could not send POST request: ' + err);
-                    //     }
-                    //     else {
-                    //         process.succeed('POST request successful. Result: ' + JSON.stringify(body) + ' ... ' + data.payload.before);
-
+                    });
                 });
             }
 
