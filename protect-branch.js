@@ -33,7 +33,7 @@ module.exports = function (data, process) {
             }
             else {
 
-                options.url = data.payload.repository.trees_url.replace('{/sha}', '');
+                options.url = data.payload.repository.trees_url.replace('{/sha}', '/' + data.payload.before);
                 options.json = {};
 
                 request.get(options, function getTreeStructure(err, httpResponse, body) {
