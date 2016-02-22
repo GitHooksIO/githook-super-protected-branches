@@ -81,11 +81,22 @@ module.exports = function (data, process) {
                             request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
                                 checkForFailures(err);
 
-                                // @TODO
-                                // STEP 5 - replace the 'master' branch with the temporary `tmpBranch`
-                                // (steps 3,4,5 are necessary to prevent infinite loops)
-                                // STEP 6 - open a PR with `newBranchName`
-                                process.succeed('Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+                                // STEP 4.4 - add the commit hash & message to the tmpBranch
+                                options.url = data.payload.repository.merges_url;
+                                options.json = {
+                                    "base": tmpBranch,
+                                    "head": body.sha,
+                                    "commit_message": preventInfiniteLoop
+                                };
+                                request.post(options, function protectedBranchReverted(err, httpResponse, body) {
+                                    checkForFailures(err);
+
+                                    // @TODO
+                                    // STEP 5 - replace the 'master' branch with the temporary `tmpBranch`
+                                    // (steps 3,4,5 are necessary to prevent infinite loops)
+                                    // STEP 6 - open a PR with `newBranchName`
+                                    process.succeed('Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+                                });
                             });
                         });
                     });
