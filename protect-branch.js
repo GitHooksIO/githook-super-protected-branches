@@ -17,7 +17,6 @@ module.exports = function (data, process) {
     }
     else if (data.payload.head_commit.message.match(/Merge pull request #([0-9]+) from (.+)/)) {
         process.succeed('This commit came from merging another branch and thus was not a problem');
-        // @TODO - ideally, we want to prevent devs from being able to branch locally, merge with branchToProtect locally, and push that up. We want all merges with branchToProtect to happen via Pull Requests.
     }
     else {
         // STEP 1 - create a new branch off branchToProtect - this will be used to open the Pull Request later
@@ -118,11 +117,6 @@ module.exports = function (data, process) {
                                         checkForFailures(err);
 
                                         process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
-
-                                        // @TODO - STEP 7 - clean up by destroying the tmp branch
-                                        // @TODO - make sure this works for repositories which have a lot of commit history (when we create a new tree SHA in step 4.2, we want to make sure we don't lose the earliest commits)
-                                        // @TODO - make it clear that developers could still potentially bypass this protection if they make a commit with the same message as `preventInfiniteLoop`, so this GitHook isn't absolutely water tight.
-
                                     });
                                 });
                             });
