@@ -78,8 +78,8 @@ module.exports = function (data, process) {
                             //     "tree":    body.sha,
                             //     "message": preventInfiniteLoop
                             // };
-                            request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
-                                checkForFailures(err);
+                            // request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
+                            //     checkForFailures(err);
 
                                 // STEP 4.4 - add the commit hash & message to the tmpBranch
                                 options.url = data.payload.repository.merges_url;
