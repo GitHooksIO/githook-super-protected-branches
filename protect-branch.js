@@ -38,20 +38,33 @@ module.exports = function (data, process) {
 
                 request.get(options, function getTreeStructure(err, httpResponse, body) {
 
-                    // STEP 2 - revert the pushed commit
-
                     options.url = data.payload.repository.trees_url.replace('{/sha}', '');
                     options.json = {
                         "base_tree": data.payload.before,
                         "tree":    body.tree
                     };
 
-                    request.post(options, function protectedBranchReverted(err, httpResponse, body) {
+                    request.post(options, function newTreeCreated(err, httpResponse, body) {
                         if (err) {
                             process.fail('Could not send POST request: ' + err);
                         }
                         else {
-                            process.succeed('POST request successful. Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+
+                            options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
+                            options.json = {
+                                "tree":    body.sha,
+                                "message": preventInfiniteLoop
+                            };
+
+                            request.post(options, function protectedBranchReverted(err, httpResponse, body) {
+                                if (err) {
+                                    process.fail('Could not send POST request: ' + err);
+                                }
+                                else {
+                                    process.succeed('POST request successful. Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+                                }
+
+                            });
                         }
 
                     });
