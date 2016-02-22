@@ -38,13 +38,12 @@ module.exports = function (data, process) {
 
                 request.get(options, function getTreeStructure(err, httpResponse, body) {
 
-                    // STEP 2 - revert the pushed commit - woops - caused an infinite loop!!!
+                    // STEP 2 - revert the pushed commit
 
-                    options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
+                    options.url = data.payload.repository.trees_url.replace('{/sha}', '');
                     options.json = {
-                        "message": preventInfiniteLoop,
-                        "tree":    body.tree[0].sha,
-                        //"parents": body.tree.map(function (item) { return item.sha; })
+                        "base_tree": data.payload.before,
+                        "tree":    body.tree
                     };
 
                     request.post(options, function protectedBranchReverted(err, httpResponse, body) {
