@@ -43,8 +43,8 @@ module.exports = function (data, process) {
                     options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
                     options.json = {
                         "message": preventInfiniteLoop,
-                        "tree":    data.payload.before,
-                        "parents": body.tree.map(function (item) { return item.sha; })
+                        "tree":    body.tree[0].sha,
+                        //"parents": body.tree.map(function (item) { return item.sha; })
                     };
 
                     request.post(options, function protectedBranchReverted(err, httpResponse, body) {
