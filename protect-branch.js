@@ -56,12 +56,31 @@ module.exports = function (data, process) {
                                 "message": preventInfiniteLoop
                             };
 
-                            request.post(options, function protectedBranchReverted(err, httpResponse, body) {
+                            var newCommit = body.sha;
+
+                            request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
                                 if (err) {
                                     process.fail('Could not send POST request: ' + err);
                                 }
                                 else {
-                                    process.succeed('POST request successful. Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+
+                                    options.url = data.payload.repository.merges_url;
+                                    options.json = {
+                                        "base": branchToProtect,
+                                        "head": newCommit,
+                                        "commit_message": preventInfiniteLoop
+                                    };
+
+                                    request.post(options, function protectedBranchReverted(err, httpResponse, body) {
+                                        if (err) {
+                                            process.fail('Could not send POST request: ' + err);
+                                        }
+                                        else {
+                                            process.succeed('POST request successful. Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+                                        }
+
+                                    });
+
                                 }
 
                             });
