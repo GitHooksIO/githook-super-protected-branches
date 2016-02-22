@@ -67,19 +67,19 @@ module.exports = function (data, process) {
                         options.url = data.payload.repository.trees_url.replace('{/sha}', '');
                         options.json = {
                             "base_tree": data.payload.before,
-                            "tree":    [    {
-      "path": ".gitignore",
-      "mode": "100644",
-      "type": "blob",
-      "sha": "a8b1cda23f83c5db4f6ba8d899f430db63fc5cf0",
-      "size": 607,
-      "url": "https://api.github.com/repos/ChrisBAshton/test-webhooks/git/blobs/a8b1cda23f83c5db4f6ba8d899f430db63fc5cf0"
-    }]
+                            "tree":    [
+                                {
+                                  "path": "another test",
+                                  "mode": "100644",
+                                  "type": "blob",
+                                  "sha": "8b137891791fe96927ad78e64b0aad7bded08bdc",
+                                  "size": 1,
+                                  "url": "https://api.github.com/repos/ChrisBAshton/test-webhooks/git/blobs/8b137891791fe96927ad78e64b0aad7bded08bdc"
+                                }
+                            ]
                         };
                         request.post(options, function newTreeCreated(err, httpResponse, body) {
                             checkForFailures(err);
-
-                            process.succeed('HELLO: ' + JSON.stringify(body));
 
                             // STEP 4.3 - create a new commit object with the current commit SHA as the parent and the new tree SHA, getting a commit SHA back
                             options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
