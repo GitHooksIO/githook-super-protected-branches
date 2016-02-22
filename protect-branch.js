@@ -52,7 +52,7 @@ module.exports = function (data, process) {
                             process.fail('Could not send POST request: ' + err);
                         }
                         else {
-                            process.succeed('POST request successful. Result: ' + JSON.stringify(body));
+                            process.succeed('POST request successful. Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
                         }
 
                     });
