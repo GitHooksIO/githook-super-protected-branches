@@ -7,7 +7,7 @@ module.exports = function (data, process) {
     }
 
     var branchToProtect = data.parameters.branch || 'master',
-        preventInfiniteLoop = 'SUPER_PROTECT_REVERT';
+        preventInfiniteLoop = 'githook-super-protected-branches protected you!';
 
     if ( data.payload.ref !== ('refs/heads/' + branchToProtect) ) {
         process.succeed('the commit was to ' + data.payload.ref + ' and thus was not a problem');
@@ -67,16 +67,7 @@ module.exports = function (data, process) {
                         options.url = data.payload.repository.trees_url.replace('{/sha}', '');
                         options.json = {
                             "base_tree": data.payload.before,
-                            "tree":    [
-                                {
-                                  "path": "another test",
-                                  "mode": "100644",
-                                  "type": "blob",
-                                  "sha": "8b137891791fe96927ad78e64b0aad7bded08bdc",
-                                  "size": 1,
-                                  "url": "https://api.github.com/repos/ChrisBAshton/test-webhooks/git/blobs/8b137891791fe96927ad78e64b0aad7bded08bdc"
-                                }
-                            ]
+                            "tree":      body.tree
                         };
                         request.post(options, function newTreeCreated(err, httpResponse, body) {
                             checkForFailures(err);
