@@ -81,20 +81,30 @@ module.exports = function (data, process) {
                             };
                             request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
                                 checkForFailures(err);
-                                process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
+
+                                // STEP 5 - point tmpBranch latest commit to `body.sha`
+                                // (which contains the 'githook-super-protected-branches saved you!' commit message)
+                                options.url = data.payload.repository.git_refs_url.replace('{/sha}', '/heads/' + tmpBranch);
+                                options.json = {
+                                    "sha": body.sha
+                                };
+                                request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
+                                    checkForFailures(err);
+
+                                    process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
+
+                                    // // STEP 6 - replace the 'master' branch with the temporary `tmpBranch`
+                                    // // (steps 3,4,5 are necessary to prevent infinite loops)
+                                    // options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/heads/' + branchToProtect;
+                                    // options.json = {
+                                    //     "sha": preventInfiniteLoopCommit,
+                                    //     "force": true
+                                    // };
+                                    // request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
 
 
-                                // // STEP 5 - replace the 'master' branch with the temporary `tmpBranch`
-                                // // (steps 3,4,5 are necessary to prevent infinite loops)
-                                // options.url = data.payload.repository.git_refs_url.replace('{/sha}', '') + '/heads/' + branchToProtect;
-                                // options.json = {
-                                //     "sha": preventInfiniteLoopCommit,
-                                //     "force": true
-                                // };
-                                // request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
-
-
-                                // });
+                                    // });
+                                });
                             });
                         });
                     });
