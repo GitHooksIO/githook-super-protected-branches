@@ -43,7 +43,7 @@ module.exports = function (data, process) {
                 request.post(options, function protectedBranchReverted(err, httpResponse, body) {
 
                     if (err) {
-                        process.fail('Could not send POST request: ' + err);
+                        process.fail('Could not send POST request: ' + err + ' ... ' + data.payload.before);
                     }
                     else {
                         process.succeed('POST request successful. Result: ' + JSON.stringify(body));
