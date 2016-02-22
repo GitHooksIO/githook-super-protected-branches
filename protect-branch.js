@@ -72,7 +72,7 @@ module.exports = function (data, process) {
                         request.post(options, function newTreeCreated(err, httpResponse, body) {
                             checkForFailures(err);
 
-                            process.succees('HELLO: ' + JSON.stringify(body));
+                            process.succeed('HELLO: ' + JSON.stringify(body));
 
                             // STEP 4.3 - create a new commit object with the current commit SHA as the parent and the new tree SHA, getting a commit SHA back
                             options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
