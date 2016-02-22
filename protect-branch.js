@@ -38,8 +38,6 @@ module.exports = function (data, process) {
 
                 request.get(options, function getTreeStructure(err, httpResponse, body) {
 
-                    process.succeed(JSON.stringify(body));
-
                     // STEP 2 - revert the pushed commit - woops - caused an infinite loop!!!
 
                     options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
