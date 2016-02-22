@@ -1,5 +1,11 @@
 module.exports = function (data, process) {
 
+    function checkForFailures(err) {
+        if (err) {
+            process.fail('Could not send POST request: ' + err);
+        }
+    }
+
     var branchToProtect = data.parameters.branch || 'master',
         preventInfiniteLoop = 'SUPER_PROTECT_REVERT';
 
@@ -10,7 +16,6 @@ module.exports = function (data, process) {
         process.succeed('This was an automated commit made by super-protected-branches, so processing was skipped');
     }
     else {
-
         // STEP 1 - branch off.
 
         var newBranchName = branchToProtect + "--super-protected--" + Date.now(),
@@ -28,66 +33,47 @@ module.exports = function (data, process) {
             };
 
         request.post(options, function newBranchCreated(err, httpResponse, body) {
-            if (err) {
-                process.fail('Could not send POST request: ' + err);
-            }
-            else {
+            checkForFailures(err);
 
-                options.url = data.payload.repository.trees_url.replace('{/sha}', '/' + data.payload.before);
-                options.json = {};
+            options.url = data.payload.repository.trees_url.replace('{/sha}', '/' + data.payload.before);
+            options.json = {};
 
-                request.get(options, function getTreeStructure(err, httpResponse, body) {
+            request.get(options, function getTreeStructure(err, httpResponse, body) {
+                checkForFailures(err);
 
-                    options.url = data.payload.repository.trees_url.replace('{/sha}', '');
+                options.url = data.payload.repository.trees_url.replace('{/sha}', '');
+                options.json = {
+                    "base_tree": data.payload.before,
+                    "tree":    body.tree
+                };
+
+                request.post(options, function newTreeCreated(err, httpResponse, body) {
+                    checkForFailures(err);
+
+                    options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
                     options.json = {
-                        "base_tree": data.payload.before,
-                        "tree":    body.tree
+                        "tree":    body.sha,
+                        "message": preventInfiniteLoop
                     };
 
-                    request.post(options, function newTreeCreated(err, httpResponse, body) {
-                        if (err) {
-                            process.fail('Could not send POST request: ' + err);
-                        }
-                        else {
+                    request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
+                        checkForFailures(err);
 
-                            options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
-                            options.json = {
-                                "tree":    body.sha,
-                                "message": preventInfiniteLoop
-                            };
+                        options.url = data.payload.repository.merges_url;
+                        options.json = {
+                            "base": branchToProtect,
+                            "head": body.sha,
+                            "commit_message": preventInfiniteLoop
+                        };
 
-                            request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
-                                if (err) {
-                                    process.fail('Could not send POST request: ' + err);
-                                }
-                                else {
+                        request.post(options, function protectedBranchReverted(err, httpResponse, body) {
+                            checkForFailures(err);
 
-                                    options.url = data.payload.repository.merges_url;
-                                    options.json = {
-                                        "base": branchToProtect,
-                                        "head": body.sha,
-                                        "commit_message": preventInfiniteLoop
-                                    };
-
-                                    request.post(options, function protectedBranchReverted(err, httpResponse, body) {
-                                        if (err) {
-                                            process.fail('Could not send POST request: ' + err);
-                                        }
-                                        else {
-                                            process.succeed('POST request successful. Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
-                                        }
-
-                                    });
-
-                                }
-
-                            });
-                        }
-
+                            process.succeed('POST request successful. Result: ' + JSON.stringify(body) + '...' + JSON.stringify(options.json));
+                        });
                     });
                 });
-            }
-
+            });
         });
     }
 }
