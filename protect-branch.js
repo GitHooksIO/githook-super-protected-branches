@@ -63,24 +63,27 @@ module.exports = function (data, process) {
                     request.get(options, function getTreeStructure(err, httpResponse, body) {
                         checkForFailures(err);
 
-                        // STEP 4.2 - create an additional commit hash to add to the tree
+                        // STEP 4.2 - post a new tree object, getting a tree SHA back
                         options.url = data.payload.repository.trees_url.replace('{/sha}', '');
                         options.json = {
                             "base_tree": data.payload.before,
-                            "tree":    body.tree
+                            "tree":    []
                         };
                         request.post(options, function newTreeCreated(err, httpResponse, body) {
                             checkForFailures(err);
 
-                            // STEP 4.3 - associate the commit hash with a commit message
+                            // STEP 4.3 - create a new commit object with the current commit SHA as the parent and the new tree SHA, getting a commit SHA back
                             options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
                             options.json = {
                                 "tree":    body.sha,
-                                "message": preventInfiniteLoop
+                                "message": preventInfiniteLoop,
+                                "parents": [data.payload.before]
                             };
                             request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
                                 checkForFailures(err);
+                                process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
 
+                            /*
                                 // STEP 4.4 - add the commit hash & message to the tmpBranch
                                 options.url = data.payload.repository.merges_url;
                                 options.json = {
@@ -93,6 +96,7 @@ module.exports = function (data, process) {
                                     checkForFailures(err);
                                     process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
                                 });
+*/
                             });
                         });
                     });
