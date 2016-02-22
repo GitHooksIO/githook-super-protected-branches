@@ -15,7 +15,7 @@ module.exports = function (data, process) {
     else if (data.payload.head_commit.message === preventInfiniteLoop ) {
         process.succeed('This was an automated commit made by super-protected-branches, so processing was skipped');
     }
-    else if (data.payload.head_commit.message.match(/^Merge pull request #([0-9]+) from (.+)$/)) {
+    else if (data.payload.head_commit.message.match(/Merge pull request #([0-9]+) from (.+)/)) {
         process.succeed('This commit came from merging another branch and thus was not a problem');
         // @TODO - ideally, we want to prevent devs from being able to branch locally, merge with branchToProtect locally, and push that up. We want all merges with branchToProtect to happen via Pull Requests.
     }
