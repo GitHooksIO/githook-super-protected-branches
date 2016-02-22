@@ -16,7 +16,7 @@ module.exports = function (data, process) {
         process.succeed('This was an automated commit made by super-protected-branches, so processing was skipped');
     }
     else {
-        // STEP 1 - branch off.
+        // STEP 1 - create a new branch off branchToProtect - this will be used to open the Pull Request later
         var newBranchName = branchToProtect + "--super-protected--" + Date.now(),
             options = {
                 url: data.payload.repository.git_refs_url.replace('{/sha}', ''),
@@ -34,7 +34,8 @@ module.exports = function (data, process) {
         request.post(options, function newBranchCreated(err, httpResponse, body) {
             checkForFailures(err);
 
-            // STEP 2 - create new temporary 'master' branch
+            // STEP 2 - create new temporary branch off branchToProtect - we will do our commit manipulation here
+            // and eventually replace branchToProtect with this temporary branch.
             var tmpBranch = branchToProtect + "--tmp--" + Date.now();
 
             options.url = data.payload.repository.git_refs_url.replace('{/sha}', ''),
@@ -45,7 +46,9 @@ module.exports = function (data, process) {
             request.post(options, function newBranchCreated(err, httpResponse, body) {
                 checkForFailures(err);
 
-                // STEP 3 - revert the pushed commit on the temporary 'master' branch
+                // STEP 3 - revert the directly pushed commit on our temporary branch
+                // The reason we cannot do this directly on branchToProtect is that it would cause an
+                // infinite loop in our GitHook!
                 options.url = data.payload.repository.git_refs_url.replace('{/sha}', '/heads/' + tmpBranch),
                 options.json = {
                     "force": true,
@@ -55,7 +58,10 @@ module.exports = function (data, process) {
                     checkForFailures(err);
 
                     // STEP 4 - add a new commit message `preventInfiniteLoop` to the `tmpBranch`.
-                    // This must be tackled in several steps.
+                    // We have to apply the preventInfiniteLoop commit message to prevent an infinite
+                    // loop (otherwise thie GitHook would be called again and would run all the revert
+                    // code again).
+                    // Adding a new commit message must be tackled in several steps.
 
                     // STEP 4.1 - get tree structure of the tmpBranch
                     options.url = data.payload.repository.trees_url.replace('{/sha}', '/' + data.payload.before);
@@ -72,24 +78,27 @@ module.exports = function (data, process) {
                         request.post(options, function newTreeCreated(err, httpResponse, body) {
                             checkForFailures(err);
 
+                            var treeSHA = body.sha;
+
                             // STEP 4.3 - create a new commit object with the current commit SHA as the parent and the new tree SHA, getting a commit SHA back
                             options.url = data.payload.repository.git_commits_url.replace('{/sha}', '');
                             options.json = {
-                                "tree":    body.sha,
+                                "tree":    treeSHA,
                                 "message": preventInfiniteLoop,
                                 "parents": [data.payload.before]
                             };
                             request.post(options, function treeAssociatedWithCommit(err, httpResponse, body) {
                                 checkForFailures(err);
 
+                                var commitSHA = body.sha;
+
                                 // STEP 5 - point the `branchToProtect` head to the latest commit to `body.sha`
                                 // (which contains the 'githook-super-protected-branches saved you!' commit message)
                                 options.url = data.payload.repository.git_refs_url.replace('{/sha}', '/heads/' + branchToProtect);
                                 options.json = {
-                                    "sha": body.sha,
+                                    "sha": commitSHA,
                                     "force": true
                                 };
-
                                 request.patch(options, function protectedBranchReverted(err, httpResponse, body) {
                                     checkForFailures(err);
 
@@ -105,6 +114,12 @@ module.exports = function (data, process) {
                                         checkForFailures(err);
 
                                         process.succeed('Result*** body: ' + JSON.stringify(body) + ' \n options: ' + JSON.stringify(options.json));
+
+                                        // @TODO - STEP 7 - clean up by destroying the tmp branch
+                                        // @TODO - make sure this works for multiple local commits all pushed at once (I think only the latest commit would be reverted at the moment).
+                                        // @TODO - make sure this works for repositories which have a lot of commit history (when we create a new tree SHA in step 4.2, we want to make sure we don't lose the earliest commits)
+                                        // @TODO - make it clear that developers could still potentially bypass this protection if they make a commit with the same message as `preventInfiniteLoop`, so this GitHook isn't absolutely water tight.
+                                        // @TODO - ideally, we want to prevent devs from being able to branch locally, merge with branchToProtect locally, and push that up. We want all merges with branchToProtect to happen via Pull Requests.
                                     });
                                 });
                             });
