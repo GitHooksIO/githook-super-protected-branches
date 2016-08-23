@@ -15,4 +15,4 @@ parameters:
     title:       Branch to protect
     description: "Default: master"
     type:        string
-    required:    no
+    required:    false
